@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Les dictées des CE1 - Édition Personnalisée</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050510;
+            --panel-bg: rgba(21, 21, 37, 0.9);
+            --text-color: #e0e0e0;
+            --neon-pink: #ff00ff;
+            --neon-blue: #00ffff;
+            --neon-green: #00ff00;
+            --neon-orange: #ff9900;
+            --neon-red: #ff3333;
+            --key-bg: #1a1a2e;
+            --font-family: 'Outfit', sans-serif;
+            --border-radius: 16px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 0, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(0, 255, 255, 0.1) 0%, transparent 40%),
+                url('https://www.transparenttextures.com/patterns/stardust.png');
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1;
+        }
+
+        header { text-align: center; margin-bottom: 5px; }
+
+        h1 {
+            font-size: clamp(1.4rem, 6vw, 2.5rem);
+            margin: 0;
+            background: linear-gradient(90deg, var(--neon-red), var(--neon-orange), var(--neon-green), var(--neon-blue), var(--neon-pink), var(--neon-red));
+            background-size: 400% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: rainbow-text 10s linear infinite;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @keyframes rainbow-text {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 400% 50%; }
+        }
+
+        .game-area {
+            background-color: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            padding: clamp(10px, 3vw, 20px);
+            border-radius: var(--border-radius);
+            text-align: center;
+            display: flex; 
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .stats-grid {
+            display: grid;
+            /* Changé de 3 à 4 colonnes pour inclure le compteur de mots */
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.6rem; text-transform: uppercase; color: #888; }
+        .stat-value { font-family: 'JetBrains Mono', monospace; font-size: clamp(0.85rem, 3.5vw, 1.1rem); font-weight: bold; }
+
+        #timer-display { color: #fff; text-shadow: 0 0 8px var(--neon-pink); }
+        #error-count { color: var(--neon-red); }
+        #current-best { color: var(--neon-blue); }
+        #words-remaining { color: var(--neon-green); }
+
+        .word-container {
+            height: clamp(70px, 12vh, 100px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-display {
+            font-size: clamp(1.4rem, 7vw, 3rem);
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.05);
+            word-break: break-all;
+        }
+
+        .typed-correct { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+        .typed-next { color: #fff; border-bottom: 3px solid var(--neon-orange); animation: blink 0.8s infinite; }
+        .typed-error { color: #fff; background: var(--neon-red); border-radius: 4px; }
+
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        .controls { display: flex; flex-direction: column; gap: 8px; }
+        @media (min-width: 600px) { .controls { flex-direction: row; } }
+
+        .select-wrapper { flex: 2; }
+        select {
+            width: 100%;
+            padding: 8px 15px;
+            background: #1a1a2e;
+            color: var(--neon-green);
+            border: 2px solid var(--neon-green);
+            border-radius: 20px;
+            font-weight: bold;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid var(--neon-blue);
+            background: transparent;
+            color: var(--neon-blue);
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover:not(:disabled) { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+        .btn:disabled { border-color: #444; color: #444; opacity: 0.5; }
+
+        .keyboard-wrapper {
+            width: 100%;
+            background: var(--panel-bg);
+            padding: 8px 4px;
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .key-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            gap: 3px;
+        }
+
+        .key {
+            background: var(--key-bg);
+            border: 1px solid #333;
+            border-bottom: 3px solid #000;
+            border-radius: 4px;
+            flex: 1;
+            height: clamp(32px, 7vw, 48px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.55rem, 2.2vw, 0.85rem);
+            color: #777;
+            position: relative;
+            user-select: none;
+        }
+
+        .key.wide { flex: 1.6; }
+        .key.extra-wide { flex: 2; }
+        .key.space { flex: 6; }
+
+        .key-active { background: var(--neon-pink) !important; color: white !important; transform: translateY(2px); border-bottom-width: 1px !important; }
+        .key-next { border-color: var(--neon-orange); color: #fff; background: rgba(255, 153, 0, 0.1); }
+
+        .key-top { font-size: 0.5rem; position: absolute; top: 1px; left: 3px; opacity: 0.4; font-weight: normal; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+        .modal { background: var(--panel-bg); border: 2px solid var(--neon-green); padding: 30px; border-radius: 20px; text-align: center; width: 100%; max-width: 400px; }
+
+        #typing-input { position: absolute; opacity: 0; pointer-events: none; top: 0; }
+
+        @media (max-width: 500px) { .key-top { display: none; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Les dictées des CE1</h1>
+        </header>
+
+        <div class="game-area">
+            <div class="stats-grid">
+                <div class="stat-item"><span class="stat-label">Reste</span><span id="words-remaining" class="stat-value">--</span></div>
+                <div class="stat-item"><span class="stat-label">Temps</span><span id="timer-display" class="stat-value">00:00.00</span></div>
+                <div class="stat-item"><span class="stat-label">Meilleur</span><span id="current-best" class="stat-value">--:--.--</span></div>
+                <div class="stat-item"><span class="stat-label">Erreurs</span><span id="error-count" class="stat-value">0</span></div>
+            </div>
+
+            <div class="word-container" id="game-trigger">
+                <div id="word-display" class="word-display">CHOISISSEZ UNE LISTE</div>
+            </div>
+
+            <input type="text" id="typing-input" autocomplete="off" spellcheck="false" inputmode="text">
+
+            <div class="controls">
+                <div class="select-wrapper"><select id="series-select"></select></div>
+                <button id="start-btn" class="btn">Démarrer</button>
+                <button id="reset-btn" class="btn" disabled>Reset</button>
+            </div>
+        </div>
+
+        <div class="keyboard-wrapper" id="keyboard">
+            <!-- Rendu dynamique par JS -->
+        </div>
+    </div>
+
+    <div id="finish-modal" class="modal-overlay">
+        <div class="modal">
+            <h2 style="color: var(--neon-green); margin-top: 0;">Félicitations !</h2>
+            <div id="results-content" style="margin: 20px 0;"></div>
+            <button class="btn" style="width:100%" onclick="closeModal()">Recommencer</button>
+        </div>
+    </div>
+
+    <script>
+        // Injection de vos listes mises à jour (sans les caractères e-dans-l'o)
+        const seriesData = {
+            S5: { title: "Liste 5 : La chambre", words: ["la chambre", "le lit", "le bureau", "l'armoire", "la fenêtre", "dans", "dehors"] },
+            S6: { title: "Liste 6 : La préhistoire", words: ["un homme", "une grotte", "une peinture", "une main", "dessous", "dessus", "sous"] },
+            S7: { title: "Liste 7 : L'antiquité", words: ["un Gaulois", "un Romain", "la bataille", "Jules César", "un chef", "alors", "longtemps"] },
+            S8: { title: "Liste 8 : Conte", words: ["un prince", "une princesse", "un cheval", "un château", "habiter", "moins", "sans"] },
+            S9: { title: "Liste 9 : Conte (2)", words: ["un dragon", "une fée", "charmant", "vivre", "se marier", "combattre", "toujours"] },
+            S10: { title: "Liste 10 : Noël", words: ["Noël", "un mois", "un sapin", "une guirlande", "un calendrier", "décorer", "sur", "surtout"] },
+            S11: { title: "Liste 11 : Noël (2)", words: ["un cadeau", "un jouet", "une bûche", "du chocolat", "content", "déballer", "aujourd'hui", "aussi"] },
+            S12: { title: "Liste 12 : La nouvelle année", words: ["la santé", "une année", "bonne", "souhaiter", "plus", "plusieurs", "encore"] },
+            S13: { title: "Liste 13 : L'hiver", words: ["l'hiver", "un bonnet", "un gant", "un manteau", "froid", "neiger", "enfin", "ensuite"] },
+            S14: { title: "Liste 14 : L'hiver (2)", words: ["un flocon", "un bonhomme", "tomber", "fabriquer", "jouer", "gober", "avant", "autant"] },
+            S15: { title: "Liste 15 : Météo", words: ["un thermomètre", "la météo", "la température", "la pluie", "le vent", "un nuage", "souffler", "observer"] },
+            S16: { title: "Liste 16 : Météo (2)", words: ["une botte", "nouveau", "enfiler", "aller", "devant", "pendant", "souvent", "vraiment"] },
+            S17: { title: "Liste 17 : Le carnaval", words: ["un masque", "la fête", "le carnaval", "un costume", "une crêpe", "manger", "pour", "pourquoi"] },
+            S18: { title: "Liste 18 : Animal", words: ["un animal", "un singe", "un oiseau", "un reptile", "le zoo", "préféré", "multicolore", "combien"] },
+            S19: { title: "Liste 19 : Animal (2)", words: ["un kangourou", "un éléphant", "une girafe", "un poisson", "un cri", "visiter", "comme", "comment"] },
+            S20: { title: "Liste 20 : Christophe Colomb", words: ["l'équipage", "une caravelle", "un explorateur", "un pays", "connu", "découvrir", "demain", "maintenant", "soudain"] },
+            S21: { title: "Liste 21 : Amitié", words: ["un copain", "les parents", "un jeu", "le plaisir", "s'amuser", "puis", "depuis", "mais", "jamais"] },
+            S22: { title: "Liste 22 : Sport", words: ["un champion", "un entraîneur", "un entraînement", "une équipe", "un match", "encourager", "rencontrer", "lorsque", "presque"] },
+            S23: { title: "Liste 23 : Corps", words: ["une série", "un monstre", "une oreille", "une dent", "les yeux", "le nez", "la langue", "après", "près de"] },
+            S24: { title: "Liste 24 : Corps (Suite)", words: ["le genou", "le ventre", "la jambe", "le docteur", "la semaine dernière", "très", "avec", "cela"] },
+            S25: { title: "Liste 25 : Famille", words: ["un oncle", "une cousine", "un souvenir", "un anniversaire", "l'Espagne", "génial", "arriver", "debout", "derrière"] },
+            S26: { title: "Liste 26 : Famille (Suite)", words: ["la famille", "la naissance", "le parrain", "la marraine", "les grands-parents", "heureux", "hier", "ici", "loin"] },
+            S27: { title: "Liste 27 : Été", words: ["la plage", "la mer", "les vacances", "une glace", "magnifique", "bronzer", "même", "mieux", "parce que", "personne"] },
+            S28: { title: "Liste 28 : Été (Suite)", words: ["la journée", "le soleil", "une bouée", "un coquillage", "un coup", "gros", "mauvais", "ramasser", "attraper", "peut-être"] }
+        };
+
+        const charToKeyMap = {
+            'a':'KeyQ','b':'KeyB','c':'KeyC','d':'KeyD','e':'KeyE','f':'KeyF','g':'KeyG','h':'KeyH','i':'KeyI','j':'KeyJ','k':'KeyK','l':'KeyL',
+            'm':'Semicolon','n':'KeyN','o':'KeyO','p':'KeyP','q':'KeyA','r':'KeyR','s':'KeyS','t':'KeyT','u':'KeyU','v':'KeyV','w':'KeyZ',
+            'x':'KeyX','y':'KeyY','z':'KeyW','A':'KeyQ','B':'KeyB','C':'KeyC','D':'KeyD','E':'KeyE','F':'KeyF','G':'KeyG','H':'KeyH','I':'KeyI',
+            'J':'KeyJ','K':'KeyK','L':'KeyL','M':'Semicolon','N':'KeyN','O':'KeyO','P':'KeyP','Q':'KeyA','R':'KeyR','S':'KeyS','T':'KeyT',
+            'U':'KeyU','V':'KeyV','W':'KeyZ','X':'KeyX','Y':'KeyY','Z':'KeyW','0':'Digit0','1':'Digit1','2':'Digit2','3':'Digit3','4':'Digit4',
+            '5':'Digit5','6':'Digit6','7':'Digit7','8':'Digit8','9':'Digit9',' ':'Space',"'":'Digit4','"':'Digit3','&':'Digit1','(':'Digit5',
+            ')':'Minus','-':'Digit6','_':'Digit8','=':'Equal','+':'Equal','*':'Backslash','/':'Period',',':'KeyM',';':'Comma',':':'Period',
+            '.':'Comma','?':'KeyM','!':'Slash','ç':'Digit9','à':'Digit0','è':'Digit7','é':'Digit2','ù':'Quote',
+            'ñ':'KeyN'
+        };
+
+        const deadKeyMaps = {
+            circumflex: { 'â':'KeyQ','ê':'KeyE','î':'KeyI','ô':'KeyO','û':'KeyU','Â':'KeyQ','Ê':'KeyE','Î':'KeyI','Ô':'KeyO','Û':'KeyU' },
+            umlaut: { 'ä':'KeyQ','ë':'KeyE','ï':'KeyI','ö':'KeyO','ü':'KeyU','Ä':'KeyQ','Ë':'KeyE','Ï':'KeyI','Ö':'KeyO','Ü':'KeyU' }
+        };
+
+        const kbLayout = [
+            [{id:'Backquote',t:'-',m:'²'},{id:'Digit1',t:'1',m:'&'},{id:'Digit2',t:'2',m:'é'},{id:'Digit3',t:'3',m:'"'},{id:'Digit4',t:'4',m:"'"},{id:'Digit5',t:'5',m:'('},{id:'Digit6',t:'6',m:'-'},{id:'Digit7',t:'7',m:'è'},{id:'Digit8',t:'8',m:'_'},{id:'Digit9',t:'9',m:'ç'},{id:'Digit0',t:'0',m:'à'},{id:'Minus',t:'°',m:')'},{id:'Equal',t:'+',m:'='},{id:'Backspace',m:'←',w:'wide'}],
+            [{id:'Tab',m:'↹',w:'wide'},{id:'KeyQ',m:'A'},{id:'KeyW',m:'Z'},{id:'KeyE',m:'E'},{id:'KeyR',m:'R'},{id:'KeyT',m:'T'},{id:'KeyY',m:'Y'},{id:'KeyU',m:'U'},{id:'KeyI',m:'I'},{id:'KeyO',m:'O'},{id:'KeyP',m:'P'},{id:'BracketLeft',t:'¨',m:'^'},{id:'BracketRight',t:'£',m:'$'},{id:'Enter',m:'⏎',w:'wide'}],
+            [{id:'CapsLock',m:'Caps',w:'wide'},{id:'KeyA',m:'Q'},{id:'KeyS',m:'S'},{id:'KeyD',m:'D'},{id:'KeyF',m:'F'},{id:'KeyG',m:'G'},{id:'KeyH',m:'H'},{id:'KeyJ',m:'J'},{id:'KeyK',m:'K'},{id:'KeyL',m:'L'},{id:'Semicolon',m:'M'},{id:'Quote',t:'%',m:'ù'},{id:'Backslash',t:'µ',m:'*'}],
+            [{id:'ShiftLeft',m:'Maj',w:'wide'},{id:'IntlBackslash',t:'>',m:'<'},{id:'KeyZ',m:'W'},{id:'KeyX',m:'X'},{id:'KeyC',m:'C'},{id:'KeyV',m:'V'},{id:'KeyB',m:'B'},{id:'KeyN',m:'N'},{id:'KeyM',t:'?',m:','},{id:'Comma',t:'.',m:';'},{id:'Period',t:'/',m:':'},{id:'Slash',t:'§',m:'!'},{id:'ShiftRight',m:'Maj',w:'wide'}],
+            [{id:'Space',m:'Espace',w:'space'}]
+        ];
+
+        let gameState = { isRunning: false, seriesIndex: 0, wordIndex: 0, charIndex: 0, words: [], startTime: null, timerId: null, errors: 0, deadKeyMode: null, bestTimes: {} };
+
+        function init() {
+            // Charge les scores sauvegardés
+            try {
+                const savedTimes = localStorage.getItem('dictee_cosmique_scores');
+                if (savedTimes) {
+                    gameState.bestTimes = JSON.parse(savedTimes);
+                }
+            } catch (e) { console.error("Erreur de chargement", e); }
+
+            renderKeyboard();
+            updateSeriesSelect();
+            updateBestTimeDisplay(); // Important : Mettre à jour l'affichage au démarrage
+            
+            document.getElementById('start-btn').onclick = startGame;
+            document.getElementById('reset-btn').onclick = resetGame;
+            document.getElementById('typing-input').onkeydown = handleKeydown;
+            document.getElementById('series-select').onchange = (e) => { gameState.seriesIndex = e.target.value; updateBestTimeDisplay(); };
+            document.getElementById('game-trigger').onclick = () => { if(gameState.isRunning) document.getElementById('typing-input').focus(); };
+        }
+
+        function updateSeriesSelect() {
+            const select = document.getElementById('series-select');
+            select.innerHTML = "";
+            const keys = Object.keys(seriesData);
+            if (keys.length === 0) {
+                const opt = document.createElement('option');
+                opt.textContent = "Aucune liste disponible";
+                select.appendChild(opt);
+                return;
+            }
+            keys.forEach((s, i) => {
+                const opt = document.createElement('option');
+                opt.value = i; 
+                // AJOUT : Affichage du nombre de mots
+                const wordCount = seriesData[s].words.length;
+                opt.textContent = `${seriesData[s].title || s} (${wordCount} mots)`;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderKeyboard() {
+            const kb = document.getElementById('keyboard');
+            kb.innerHTML = "";
+            kbLayout.forEach(row => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'key-row';
+                row.forEach(k => {
+                    const el = document.createElement('div');
+                    el.id = k.id; el.className = `key ${k.w || ''}`;
+                    if(k.t) el.innerHTML += `<span class="key-top">${k.t}</span>`;
+                    el.innerHTML += `<span class="key-main">${k.m}</span>`;
+                    rowEl.appendChild(el);
+                });
+                kb.appendChild(rowEl);
+            });
+        }
+
+        function updateWordsRemaining() {
+            const el = document.getElementById('words-remaining');
+            if (!gameState.isRunning) {
+                el.textContent = '--';
+            } else {
+                const remaining = gameState.words.length - gameState.wordIndex;
+                el.textContent = remaining;
+            }
+        }
+
+        function startGame() {
+            if(gameState.isRunning) return;
+            const keys = Object.keys(seriesData);
+            if (keys.length === 0) return;
+            
+            const currentList = seriesData[keys[gameState.seriesIndex]].words;
+            if (!currentList || currentList.length === 0) {
+                document.getElementById('word-display').textContent = "LISTE VIDE !";
+                return;
+            }
+
+            gameState.isRunning = true;
+            gameState.words = shuffle([...currentList]);
+            gameState.wordIndex = 0; gameState.charIndex = 0; gameState.errors = 0;
+            gameState.startTime = Date.now();
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('reset-btn').disabled = false;
+            document.getElementById('series-select').disabled = true;
+            gameState.timerId = setInterval(updateTimer, 50);
+            
+            // Initialisation de l'affichage
+            updateWordDisplay();
+            updateWordsRemaining(); 
+            
+            document.getElementById('typing-input').focus();
+        }
+
+        function resetGame() {
+            clearInterval(gameState.timerId);
+            gameState.isRunning = false;
+            document.getElementById('timer-display').textContent = '00:00.00';
+            document.getElementById('error-count').textContent = '0';
+            document.getElementById('words-remaining').textContent = '--';
+            document.getElementById('word-display').textContent = 'PRÊT ?';
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('reset-btn').disabled = true;
+            document.getElementById('series-select').disabled = false;
+            document.querySelectorAll('.key').forEach(k => k.classList.remove('key-next', 'key-active'));
+        }
+
+        function handleKeydown(e) {
+            if(!gameState.isRunning || e.repeat) return;
+            const char = gameState.words[gameState.wordIndex][gameState.charIndex];
+            const key = e.key; const code = e.code;
+            if(['Shift','Control','Alt','Meta','CapsLock','Tab'].includes(key)) return highlightKey(code);
+            e.preventDefault();
+            highlightKey(code);
+            let correct = false;
+            if(gameState.deadKeyMode) {
+                if(code === deadKeyMaps[gameState.deadKeyMode][char]) { correct = true; gameState.deadKeyMode = null; }
+                else { triggerError(); gameState.deadKeyMode = null; }
+            } else {
+                if(deadKeyMaps.circumflex[char]) {
+                    if(code === 'BracketLeft' && !e.shiftKey) { gameState.deadKeyMode = 'circumflex'; correct = true; }
+                    else triggerError();
+                } else if(deadKeyMaps.umlaut[char]) {
+                    if(code === 'BracketLeft' && e.shiftKey) { gameState.deadKeyMode = 'umlaut'; correct = true; }
+                    else triggerError();
+                } else {
+                    if(key === char) correct = true;
+                    else triggerError();
+                }
+            }
+            if(correct && !gameState.deadKeyMode) {
+                gameState.charIndex++;
+                if(gameState.charIndex >= gameState.words[gameState.wordIndex].length) {
+                    gameState.wordIndex++; gameState.charIndex = 0;
+                    
+                    // Mise à jour du compteur de mots restants
+                    updateWordsRemaining();
+                    
+                    if(gameState.wordIndex >= gameState.words.length) return finishGame();
+                }
+            }
+            updateWordDisplay();
+        }
+
+        function finishGame() {
+            clearInterval(gameState.timerId);
+            gameState.isRunning = false;
+            const time = Date.now() - gameState.startTime;
+            const keys = Object.keys(seriesData);
+            const sName = keys[gameState.seriesIndex];
+            
+            // Mise à jour du meilleur temps
+            if(!gameState.bestTimes[sName] || time < gameState.bestTimes[sName]) {
+                gameState.bestTimes[sName] = time;
+                // Sauvegarde dans le localStorage
+                localStorage.setItem('dictee_cosmique_scores', JSON.stringify(gameState.bestTimes));
+                // Mise à jour immédiate de l'affichage
+                updateBestTimeDisplay();
+            }
+
+            document.getElementById('results-content').innerHTML = `<p>Mission <b>${seriesData[sName].title || sName}</b> réussie !</p><p>Temps : <b>${document.getElementById('timer-display').textContent}</b></p><p>Erreurs : <b>${gameState.errors}</b></p>`;
+            document.getElementById('finish-modal').style.display = 'flex';
+        }
+
+        function triggerError() {
+            gameState.errors++;
+            document.getElementById('error-count').textContent = gameState.errors;
+            const wd = document.getElementById('word-display');
+            wd.style.transform = 'translateX(-5px)';
+            setTimeout(() => wd.style.transform = 'translateX(5px)', 50);
+            setTimeout(() => wd.style.transform = 'translateX(0)', 100);
+        }
+
+        function updateWordDisplay() {
+            if(gameState.wordIndex >= gameState.words.length) return; // Sécurité fin de jeu
+            const word = gameState.words[gameState.wordIndex];
+            if (!word) return;
+            let h = '';
+            for(let i=0; i<word.length; i++) {
+                if(i < gameState.charIndex) h += `<span class="typed-correct">${word[i]}</span>`;
+                else if(i === gameState.charIndex) h += `<span class="typed-next">${word[i]}</span>`;
+                else h += `<span>${word[i]}</span>`;
+            }
+            document.getElementById('word-display').innerHTML = h;
+            updateHints();
+        }
+
+        function updateHints() {
+            document.querySelectorAll('.key').forEach(k => k.classList.remove('key-next'));
+            if(!gameState.isRunning) return;
+            const word = gameState.words[gameState.wordIndex];
+            if (!word) return;
+            const char = word[gameState.charIndex];
+            if(gameState.deadKeyMode) {
+                const c = deadKeyMaps[gameState.deadKeyMode][char];
+                if(c) document.getElementById(c).classList.add('key-next');
+            } else {
+                if(deadKeyMaps.circumflex[char]) document.getElementById('BracketLeft').classList.add('key-next');
+                else if(deadKeyMaps.umlaut[char]) { document.getElementById('ShiftLeft').classList.add('key-next'); document.getElementById('BracketLeft').classList.add('key-next'); }
+                else {
+                    const c = charToKeyMap[char];
+                    if(c) {
+                        document.getElementById(c).classList.add('key-next');
+                        if(char === char.toUpperCase() && char.match(/[A-Z]/)) document.getElementById('ShiftLeft').classList.add('key-next');
+                    }
+                }
+            }
+        }
+
+        function highlightKey(c) {
+            const el = document.getElementById(c);
+            if(el) { el.classList.add('key-active'); setTimeout(() => el.classList.remove('key-active'), 100); }
+        }
+
+        function updateTimer() {
+            const d = Date.now() - gameState.startTime;
+            const m = Math.floor(d/60000).toString().padStart(2,'0');
+            const s = Math.floor((d%60000)/1000).toString().padStart(2,'0');
+            const ms = Math.floor((d%1000)/10).toString().padStart(2,'0');
+            document.getElementById('timer-display').textContent = `${m}:${s}.${ms}`;
+        }
+
+        function updateBestTimeDisplay() {
+            const keys = Object.keys(seriesData);
+            if (keys.length === 0) return;
+            const b = gameState.bestTimes[keys[gameState.seriesIndex]];
+            const el = document.getElementById('current-best');
+            if(b) {
+                const m = Math.floor(b/60000).toString().padStart(2,'0');
+                const s = Math.floor((b%60000)/1000).toString().padStart(2,'0');
+                const ms = Math.floor((b%1000)/10).toString().padStart(2,'0');
+                el.textContent = `${m}:${s}.${ms}`;
+            } else el.textContent = '--:--.--';
+        }
+
+        function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+        function closeModal() { document.getElementById('finish-modal').style.display = 'none'; resetGame(); }
+        window.onload = init;
+    </script>
+</body>
+</html>
